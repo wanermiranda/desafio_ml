@@ -1,5 +1,5 @@
 #!/bin/bash
-conda create --force -y --name ml2 python=3.8 && \
+conda create --force -y --name ml2 python=3.6 && \
 conda activate ml2 && \
 conda install -y numpy \
 		pandas \
@@ -7,7 +7,6 @@ conda install -y numpy \
 		jupyter \
 		seaborn \
 		statsmodels \
-		keras-gpu  \
-		tensorflow-gpu \
 		lightgbm \
-		pylint 
+		pylint && \
+conda install -y -c conda-forge multicore-tsne	
