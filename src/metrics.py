@@ -49,9 +49,11 @@ def applySilhouetteScore(X, y_pred):
 
 
 def applyRegressionMetrics(y, y_pred):
+    y = np.round(y, 0)
+    y_pred = np.round(y_pred, 0)
     error = math.sqrt(((y_pred-y)**2).mean())
     mape = (np.abs(y_pred-y) / y).mean()
-    mdape = (np.abs(y_pred-y) / y).median()
+    mdape = np.median(np.abs(y_pred-y) / y)
     res_metrics = {
         'y': y,
         'y_pred': y_pred,
@@ -67,9 +69,11 @@ def applyRegressionMetrics(y, y_pred):
 
 
 def evaluateRegression(y, y_pred):
+    y = np.round(y, 0)
+    y_pred = np.round(y_pred, 0)
     error = math.sqrt(((y_pred-y)**2).mean())
     mape = (np.abs(y_pred-y) / y).mean()
-    mdape = (np.abs(y_pred-y) / y).median()
+    mdape = np.median(np.abs(y_pred-y) / y)
     print("RMSE : %.4f" % error)
     print("MAPE': %.4f" % mape)
     print("MDAPE': %.4f" % mdape)
