@@ -19,6 +19,8 @@
 	1. Clustering (unsupervised)
 		- Evaluate the quality of the clustering.
 		- Evaluate the semantics of the cluster (characteristics).
+		- The better clustering was when reduced the behaviour to months, weekends, pis exception (0, 9.25), sources and categories. 
+		- 
 	2. Predict the product sales for the next months: 
 		- june, july and august
 		- Imagine that you don't have a stock and you need to buy everything. 
@@ -34,3 +36,13 @@
 	* Research capabilities to solve the question. 
 	* Using of algorithms for prediction and classification. 
 	* Capacity to transmit complex knowledge in a simple way; Comunication with people outside the academic/tech world. 
+
+
+
+
+## Notes on the clustering 
+	- During the EDA it was possible to see that the month of may is a great separator and, it returned again during the clustering, when 5 / 10 showed it as a proeminent feature. 
+	- January and march also appeared in the same way, separating 6/10 
+	- The channels played another huge part, one cluster (5) was characterized by the existence of a particular channel. 
+	- The tax exception was also a separation, probably because of the characteristics of the product.
+	- The weekd behaviour was kind courious also, but not so proeminent. 
