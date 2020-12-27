@@ -10,3 +10,4 @@ conda install -y numpy \
 		lightgbm \
 		pylint && \
 conda install -y -c conda-forge multicore-tsne	
+mkdir -p ./data/exps/
