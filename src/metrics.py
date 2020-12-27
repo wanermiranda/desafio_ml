@@ -3,7 +3,7 @@ import pandas as pd
 import sklearn
 from sklearn.metrics import davies_bouldin_score, calinski_harabasz_score, silhouette_score
 
-def applyAllMetrics(X,y_pred):
+def applyClusterMetrics(X,y_pred):
 
 	applyDaviesBouldinScore(X,y_pred)
 	applyCalinskiScore(X,y_pred)
