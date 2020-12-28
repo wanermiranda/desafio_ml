@@ -109,9 +109,9 @@ We used 5  metrics here:
 * MAE - Mean Absolute Error, similar to the RMSE and more understandable but less sentive to outliers.
 * MAPE - Mean Absolute Percentage Error, similar to the MAE but here in terms of percentages. 
 * MDAPE - Similar to the MAPE but using the median 50% percentile instead of the mean. It shows that 50% of the distribution error is bellow a value. It is good to check regressions overall and more understandable to the customer because it is normalized across any volumes of predictions. 
---- 
 
-#### Experiments
+
+### Experiments
 * At this point I was 2 days from the due date, so I had to make up time.
 * There were 14 experiments in total. 
 * Starting fixing 4 simple regressors with no fine-tunning: 
@@ -119,4 +119,72 @@ We used 5  metrics here:
     * Gradient Boosting
     * Light GBM 
     * RandomForest
-* Decided for those because I'm more confortable with their results. Decisions trees require less effort with missing values (nan, null)
+* Decided for those because I'm more confortable with their results. Decisions trees require less effort with missing values (nan, null) and are quite faster to train / evaluate.
+#### Evaluation Protocol
+* The protocol used was a timeseries K fold, resulting in 7 folds. They are implemented in the notebooks with name ending DatasetPrep. 
+```
+{'set': 0, 
+    'train': ['2016-06', '2016-07', '2016-08'], 
+    'val': ['2016-09', '2016-10', '2016-11', '2016-12', '2017-01', '2017-02']}
+{'set': 1, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09'], 
+    'val': ['2016-10', '2016-11', '2016-12', '2017-01', '2017-02']}
+{'set': 2, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09', '2016-10'], 
+    'val': ['2016-11', '2016-12', '2017-01', '2017-02']}
+{'set': 3, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09', '2016-10', '2016-11'], 
+    'val': ['2016-12', '2017-01', '2017-02']}
+{'set': 4, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09', '2016-10', '2016-11', '2016-12'], 
+    'val': ['2017-01', '2017-02']}
+{'set': 5, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09', '2016-10', '2016-11', '2016-12', '2017-01'], 
+    'val': ['2017-02']}
+{'set': 6, 
+    'train': ['2016-06', '2016-07', '2016-08', '2016-09', '2016-10', '2016-11', '2016-12', '2017-01', '2017-02'], 
+    'val': ['2017-03', '2017-04', '2017-05']}
+```
+
+* The pair sets from 0 to 5 were used to train the regressors and collect their metrics as average and deviation.
+    * Their mean score on all sets is the basis of selection of features during the first 10 experiments. 
+* The pair set 6 was reserved as train test for final evaluations. 
+    * We used it mostly to see how the regressors will work more closely to the final test june, july and august of 2017. 
+### Experiments
+* The first experiments were as expected `kitchen-sink` with all features to the table along with all for regressors, the results were as bad as random. But trying to predict the amount of sales without knowing the product. 
+* From the experiment 5 onward the product code was added as feature which made the mean r^2 jump from 0.11 to 0.43 on lightgbm, from 0.1 to 0.38 on the randomforest (all Sets 0..5). Although the other metrics were very bad. 
+*  With the experiments 7 to 9, we started to check the results also monthly on the set 6, and it showed that the two clustering methods were contributing almost the same to the performance. The choice was then to keep only one the Hierarchical clustering (easier to interpret with the dendogram in future studies).
+* Now from the experiment 10 foward we kept the gradient boosting methods focusing on quantiles. 
+    * The idea is that the quantile regression could help with the high values of MDAPE, we were missing the values by almost the double of the amount expected.
+    * There was also the idea of bringing a little bit of network network to the play. Without success (further notice: use embedding layers could help).
+    * The MDAPE improved a bit from 90% to 66% (sets 0..5). The best R2 was still on the verge of 0.45. 
+* In the experiment 12 we brought back the `unit_price` feature removed during the early experiments and with the quantile it brought the results up a big more. 
+    * Kept the 66% of MDAPE now with a 0.57 r2 on the sets 0..5. 
+* With some fine tunning it improved marginally at this point. 
+    ```
+        Used grid a search training from 2016-06 to 2017-02 and validating against 2017-03, 2017-04 and 2017-05. 
+    ```
+    * kept the lightgbm and lightgbm with quantiles. 
+* The experiments 13 and 14 were to compare the embeddings (10 clusters against 31 clusters). 
+* The best result obtained was with the 31 clusters in the experiment 14: 
+    * Exp 13: 
+
+|    RMSE    |   MAPE   |   MDAPE  |      MSE     |     MAE    |    R2    |                      reg_inst                     | r_name | set | year_month |
+|:----------:|:--------:|:--------:|:------------:|:----------:|:--------:|:-------------------------------------------------:|:------:|:---:|:----------:|
+| 170.224393 | 2.668993 | 0.852349 | 28976.344000 | 82.856000  | 0.484495 | LGBMRegressor(max_depth=9, metric='mape', n_es... | gbm    | 6   | 2017-03    |
+| 159.561624 | 2.520156 | 0.660550 | 25459.912000 | 70.456000  | 0.547054 | LGBMRegressor(alpha=0.5, max_depth=9, metric='... | gbm_q  | 6   | 2017-03    |
+| 135.783458 | 3.127138 | 0.820856 | 18437.147541 | 73.557377  | 0.623034 | LGBMRegressor(max_depth=9, metric='mape', n_es... | gbm    | 6   | 2017-04    |
+| 116.744291 | 1.741741 | 0.558451 | 13629.229508 | 59.540984  | 0.721337 | LGBMRegressor(alpha=0.5, max_depth=9, metric='... | gbm_q  | 6   | 2017-04    |
+| 200.112799 | 1.956087 | 0.761905 | 40045.132231 | 103.016529 | 0.462891 | LGBMRegressor(max_depth=9, metric='mape', n_es... | gbm    | 6   | 2017-05    |
+| 181.566895 | 1.549538 | 0.575758 | 32966.537190 | 87.347107  | 0.557833 | LGBMRegressor(alpha=0.5, max_depth=9, metric='... | gbm_q  | 6   | 2017-05    |
+
+    * Exp 14: 
+
+|    RMSE    |   MAPE   |   MDAPE  |      MSE     |    MAE    |    R2    |                      reg_inst                     | r_name | set | year_month |
+|:----------:|:--------:|:--------:|:------------:|:---------:|:--------:|:-------------------------------------------------:|:------:|:---:|:----------:|
+| 137.829083 | 2.099851 | 0.777778 | 18996.856000 | 64.520000 | 0.662035 | LGBMRegressor(max_depth=9, metric='mape', min_... | gbm    | 6   | 2017-03    |
+| 132.293280 | 1.566074 | 0.645161 | 17501.512000 | 57.576000 | 0.688638 | LGBMRegressor(alpha=0.5, max_depth=21, metric=... | gbm_q  | 6   | 2017-03    |
+| 110.498275 | 1.895688 | 0.854167 | 12209.868852 | 62.672131 | 0.750357 | LGBMRegressor(max_depth=9, metric='mape', min_... | gbm    | 6   | 2017-04    |
+| 120.300818 | 1.387526 | 0.500000 | 14472.286885 | 58.532787 | 0.704100 | LGBMRegressor(alpha=0.5, max_depth=21, metric=... | gbm_q  | 6   | 2017-04    |
+| 154.531550 | 3.350919 | 0.771429 | 23880.000000 | 86.016529 | 0.679707 | LGBMRegressor(max_depth=9, metric='mape', min_... | gbm    | 6   | 2017-05    |
+| 146.911622 | 1.560838 | 0.666667 | 21583.024793 | 81.636364 | 0.710516 | LGBMRegressor(alpha=0.5, max_depth=21, metric=... | gbm_q  | 6   | 2017-05    |
