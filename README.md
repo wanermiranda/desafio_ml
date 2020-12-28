@@ -2,6 +2,8 @@
 This is a project to takle a challege proposed by the Magazine Luiza team. 
 Predict the demand of products for next N months based on a history of previous sales. 
 
+If you want more information you can go to the [Experiments Journal](notebooks/README.md).
+
 ## Install
 First you download the data needed and unpack it. 
 ```
