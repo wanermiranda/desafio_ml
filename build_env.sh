@@ -8,6 +8,8 @@ conda install -y numpy \
 		seaborn \
 		statsmodels \
 		lightgbm \
+		keras \
+		autopep8 \
 		pylint && \
 conda install -y -c conda-forge multicore-tsne	
 mkdir -p ./data/exps/
